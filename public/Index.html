@@ -3,132 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>皇家百家乐</title>
+    <title>皇家娱乐</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Georgia', serif;
-            background: #0a0a0a;
-            background-image: radial-gradient(ellipse at center, #1a1000 0%, #000 100%);
-            color: #d4af37; min-height: 100vh; user-select: none;
-        }
+        body { font-family: 'Georgia', serif; background: #0a0a0a; background-image: radial-gradient(ellipse at center, #1a1000 0%, #000 100%); color: #d4af37; min-height: 100vh; user-select: none; }
         .container { max-width: 500px; margin: 0 auto; padding: 10px; }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; background: linear-gradient(180deg, #1a0a00, #000);
-            border: 2px solid #d4af37; border-radius: 12px; margin-bottom: 10px;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: linear-gradient(180deg, #1a0a00, #000); border: 2px solid #d4af37; border-radius: 12px; margin-bottom: 10px; }
         .header .title { font-size: 20px; font-weight: bold; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
         .header .balance { color: #ffd700; font-size: 16px; }
+        .nav-tabs { display: flex; gap: 5px; margin: 10px 0; }
+        .nav-tab { flex: 1; padding: 10px; border: 1px solid #d4af37; border-radius: 8px; text-align: center; color: #d4af37; background: #111; cursor: pointer; font-size: 13px; }
+        .nav-tab.active { background: #d4af37; color: #000; }
+        .page { display: none; }
+        .page.active { display: block; }
         .room-tabs { display: flex; gap: 8px; margin: 10px 0; }
-        .room-tab {
-            flex: 1; padding: 10px; border: 1px solid #d4af37; border-radius: 8px;
-            text-align: center; color: #d4af37; background: #111; cursor: pointer; font-weight: bold;
-        }
+        .room-tab { flex: 1; padding: 10px; border: 1px solid #d4af37; border-radius: 8px; text-align: center; color: #d4af37; background: #111; cursor: pointer; font-weight: bold; }
         .room-tab.active { background: #d4af37; color: #000; }
-        .table {
-            background: linear-gradient(135deg, #0a3a0a, #051a05);
-            border: 3px solid #d4af37; border-radius: 16px; padding: 20px; margin: 10px 0;
-            box-shadow: 0 0 30px rgba(212,175,55,0.3);
-        }
+        .table { background: linear-gradient(135deg, #0a3a0a, #051a05); border: 3px solid #d4af37; border-radius: 16px; padding: 20px; margin: 10px 0; box-shadow: 0 0 30px rgba(212,175,55,0.3); }
         .cards-row { display: flex; justify-content: space-around; }
         .card-spot { text-align: center; }
         .card-spot .label { color: #ffd700; font-size: 13px; margin-bottom: 6px; }
         .cards { display: flex; gap: 4px; justify-content: center; min-height: 55px; align-items: center; }
-        .card {
-            width: 40px; height: 56px; background: #fff; border-radius: 5px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 15px; font-weight: bold; color: #000;
-        }
+        .card { width: 40px; height: 56px; background: #fff; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: #000; }
         .card.red { color: #a00; }
-        .card.back {
-            background: linear-gradient(135deg, #8b0000, #400); color: #ffd700; font-size: 11px;
-        }
+        .card.back { background: linear-gradient(135deg, #8b0000, #400); color: #ffd700; font-size: 11px; }
         .points { font-size: 20px; color: #ffd700; margin-top: 5px; text-shadow: 0 0 10px #ffd700; }
-        .result-banner {
-            text-align: center; padding: 10px; border-radius: 10px; font-size: 18px;
-            font-weight: bold; display: none; margin: 10px 0;
-        }
+        .result-banner { text-align: center; padding: 10px; border-radius: 10px; font-size: 18px; font-weight: bold; display: none; margin: 10px 0; }
         .result-banner.win { display: block; background: rgba(0,255,0,0.1); color: #0f0; border: 1px solid #0f0; }
         .result-banner.lose { display: block; background: rgba(255,0,0,0.1); color: #f44; border: 1px solid #f44; }
         .result-banner.tie { display: block; background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; }
         .timer { text-align: center; font-size: 24px; color: #ffd700; margin: 10px 0; }
         .bet-area { display: flex; gap: 10px; margin: 10px 0; }
-        .bet-btn {
-            flex: 1; padding: 14px; border: 2px solid #d4af37; border-radius: 10px;
-            background: #111; color: #d4af37; font-size: 16px; font-weight: bold; cursor: pointer;
-            text-align: center;
-        }
+        .bet-btn { flex: 1; padding: 14px; border: 2px solid #d4af37; border-radius: 10px; background: #111; color: #d4af37; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .bet-btn:active { transform: scale(0.95); }
         .bet-btn.selected { background: #d4af37; color: #000; }
         .amount-area { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
-        .amount-btn {
-            padding: 8px 14px; border: 1px solid #d4af37; border-radius: 20px;
-            background: #111; color: #d4af37; cursor: pointer; font-size: 13px;
-        }
+        .amount-btn { padding: 8px 14px; border: 1px solid #d4af37; border-radius: 20px; background: #111; color: #d4af37; cursor: pointer; font-size: 13px; }
         .amount-btn.selected { background: #d4af37; color: #000; }
-        .btn {
-            width: 100%; padding: 14px; background: #d4af37; color: #000; border: none;
-            border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0;
-        }
+        .btn { width: 100%; padding: 14px; background: #d4af37; color: #000; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0; }
         .btn:active { transform: scale(0.97); }
-        .btn:disabled { opacity: 0.4; }
-        .player-list {
-            background: #111; border: 1px solid #d4af37; border-radius: 12px;
-            padding: 12px; margin: 10px 0;
-        }
-        .player-item {
-            display: flex; justify-content: space-between; padding: 8px 0;
-            border-bottom: 1px solid #222; font-size: 13px;
-        }
-        .admin-panel {
-            background: #111; border: 2px solid #ffd700; border-radius: 12px;
-            padding: 15px; margin: 10px 0; display: none;
-        }
+        .player-list { background: #111; border: 1px solid #d4af37; border-radius: 12px; padding: 12px; margin: 10px 0; }
+        .player-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; font-size: 13px; }
+        .admin-panel { background: #111; border: 2px solid #ffd700; border-radius: 12px; padding: 15px; margin: 10px 0; display: none; }
         .admin-panel h3 { color: #ffd700; text-align: center; margin-bottom: 10px; }
-        .admin-panel input {
-            width: 100%; padding: 10px; border: 1px solid #d4af37; border-radius: 8px;
-            background: #000; color: #ffd700; margin: 5px 0; font-size: 14px;
-        }
-        .admin-btn {
-            padding: 8px 16px; border: 1px solid #d4af37; border-radius: 20px;
-            background: #222; color: #ffd700; cursor: pointer; margin: 4px; font-size: 12px;
-        }
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: flex; align-items: center;
-            justify-content: center; z-index: 100;
-        }
-        .modal-box {
-            background: #111; border: 2px solid #d4af37; border-radius: 16px;
-            padding: 25px; width: 85%; max-width: 380px;
-        }
+        .admin-panel input { width: 100%; padding: 10px; border: 1px solid #d4af37; border-radius: 8px; background: #000; color: #ffd700; margin: 5px 0; font-size: 14px; }
+        .admin-btn { padding: 8px 16px; border: 1px solid #d4af37; border-radius: 20px; background: #222; color: #ffd700; cursor: pointer; margin: 4px; font-size: 12px; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-box { background: #111; border: 2px solid #d4af37; border-radius: 16px; padding: 25px; width: 85%; max-width: 380px; }
         .modal-box h2 { color: #ffd700; text-align: center; margin-bottom: 15px; }
-        .modal-box input {
-            width: 100%; padding: 12px; border: 1px solid #d4af37; border-radius: 8px;
-            background: #000; color: #ffd700; margin: 8px 0; font-size: 15px;
-        }
-        .modal-box button {
-            width: 100%; padding: 14px; background: #d4af37; color: #000;
-            border: none; border-radius: 25px; font-size: 16px; font-weight: bold;
-            cursor: pointer; margin-top: 10px;
-        }
+        .modal-box input { width: 100%; padding: 12px; border: 1px solid #d4af37; border-radius: 8px; background: #000; color: #ffd700; margin: 8px 0; font-size: 15px; }
+        .modal-box button { width: 100%; padding: 14px; background: #d4af37; color: #000; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .link-btn { background: transparent !important; color: #d4af37 !important; border: 1px solid #d4af37 !important; margin-top: 5px !important; }
         .error-msg { color: #f44; font-size: 12px; text-align: center; }
-        .sound-btn {
-            position: fixed; top: 10px; right: 10px; z-index: 200;
-            width: 36px; height: 36px; border-radius: 50%;
-            background: #111; border: 1px solid #d4af37; color: #ffd700;
-            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
+        .sound-btn { position: fixed; top: 10px; right: 10px; z-index: 200; width: 36px; height: 36px; border-radius: 50%; background: #111; border: 1px solid #d4af37; color: #ffd700; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
     <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
-
     <div class="modal" id="loginModal">
         <div class="modal-box">
-            <h2>👑 皇家百家乐</h2>
+            <h2>👑 皇家娱乐</h2>
             <div id="loginError" class="error-msg"></div>
             <div id="loginForm">
                 <input type="text" id="loginName" placeholder="用户名">
@@ -151,158 +85,103 @@
             </div>
         </div>
     </div>
-
     <div class="container" id="mainUI" style="display:none;">
         <div class="header">
-            <div class="title">👑 皇家百家乐</div>
+            <div class="title">👑 皇家娱乐</div>
             <div class="balance">💰 <span id="myBalance">0</span></div>
         </div>
-        <div class="room-tabs" id="roomTabs">
-            <div class="room-tab active" onclick="changeRoom('A')">A厅</div>
-            <div class="room-tab" onclick="changeRoom('B')">B厅</div>
-            <div class="room-tab" onclick="changeRoom('VIP')">VIP厅</div>
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchPage('baccarat')">🎰 百家乐</div>
+            <div class="nav-tab" onclick="switchPage('sports')">⚽ 体育</div>
         </div>
-        <div class="result-banner" id="resultBanner"></div>
-        <div class="table">
-            <div class="cards-row">
-                <div class="card-spot">
-                    <div class="label">🏦 庄</div>
-                    <div class="cards" id="bankerCards"><div class="card back">?</div><div class="card back">?</div></div>
-                    <div class="points" id="bankerPoints"></div>
-                </div>
-                <div class="card-spot">
-                    <div class="label">👤 闲</div>
-                    <div class="cards" id="playerCards"><div class="card back">?</div><div class="card back">?</div></div>
-                    <div class="points" id="playerPoints"></div>
+        <div class="page active" id="page-baccarat">
+            <div class="room-tabs">
+                <div class="room-tab active" onclick="changeRoom('A')">A厅</div>
+                <div class="room-tab" onclick="changeRoom('B')">B厅</div>
+                <div class="room-tab" onclick="changeRoom('VIP')">VIP厅</div>
+            </div>
+            <div class="result-banner" id="resultBanner"></div>
+            <div class="table">
+                <div class="cards-row">
+                    <div class="card-spot"><div class="label">🏦 庄</div><div class="cards" id="bankerCards"><div class="card back">?</div><div class="card back">?</div></div><div class="points" id="bankerPoints"></div></div>
+                    <div class="card-spot"><div class="label">👤 闲</div><div class="cards" id="playerCards"><div class="card back">?</div><div class="card back">?</div></div><div class="points" id="playerPoints"></div></div>
                 </div>
             </div>
+            <div class="timer" id="timer">请下注</div>
+            <div class="bet-area">
+                <button class="bet-btn" onclick="selectBet('banker')">庄</button>
+                <button class="bet-btn" onclick="selectBet('player')">闲</button>
+                <button class="bet-btn" onclick="selectBet('tie')">和</button>
+            </div>
+            <div class="amount-area">
+                <button class="amount-btn" onclick="selectAmount(50)">50</button>
+                <button class="amount-btn" onclick="selectAmount(100)">100</button>
+                <button class="amount-btn" onclick="selectAmount(200)">200</button>
+                <button class="amount-btn" onclick="selectAmount(500)">500</button>
+                <button class="amount-btn" onclick="selectAmount(1000)">1000</button>
+                <button class="amount-btn" onclick="selectAmount('all')">All in</button>
+            </div>
+            <button class="btn" id="confirmBet" onclick="placeBet()">🎯 确认下注</button>
         </div>
-        <div class="timer" id="timer">请下注</div>
-        <div class="bet-area">
-            <button class="bet-btn" onclick="selectBet('banker')">庄</button>
-            <button class="bet-btn" onclick="selectBet('player')">闲</button>
-            <button class="bet-btn" onclick="selectBet('tie')">和</button>
+        <div class="page" id="page-sports">
+            <h3 style="color:#ffd700;text-align:center;margin:20px 0;">⚽ 体育盘口</h3>
+            <div id="sportsList" style="color:#aaa;text-align:center;">加载中...</div>
         </div>
-        <div class="amount-area">
-            <button class="amount-btn" onclick="selectAmount(50)">50</button>
-            <button class="amount-btn" onclick="selectAmount(100)">100</button>
-            <button class="amount-btn" onclick="selectAmount(200)">200</button>
-            <button class="amount-btn" onclick="selectAmount(500)">500</button>
-            <button class="amount-btn" onclick="selectAmount(1000)">1000</button>
-            <button class="amount-btn" onclick="selectAmount('all')">All in</button>
-        </div>
-        <button class="btn" id="confirmBet" onclick="placeBet()">🎯 确认下注</button>
-
         <div class="admin-panel" id="adminPanel">
             <h3>👑 管理后台</h3>
-            <input type="text" id="rechargeId" placeholder="会员ID">
-            <input type="number" id="rechargeAmount" placeholder="金额">
-            <button class="admin-btn" onclick="recharge()">💰 充值</button>
-            <button class="admin-btn" onclick="deduct()">🔻 扣款</button>
-            <button class="admin-btn" onclick="setVip(true)">⭐ 设VIP</button>
-            <button class="admin-btn" onclick="setVip(false)">取消VIP</button>
+            <input type="text" id="rechargeId" placeholder="会员ID"><input type="number" id="rechargeAmount" placeholder="金额">
+            <button class="admin-btn" onclick="recharge()">💰充值</button><button class="admin-btn" onclick="deduct()">🔻扣款</button>
+            <button class="admin-btn" onclick="setVip(true)">⭐VIP</button><button class="admin-btn" onclick="setVip(false)">取消VIP</button>
             <hr style="border-color:#333;margin:8px 0;">
-            <button class="admin-btn" onclick="presetResult('banker')">让庄赢</button>
-            <button class="admin-btn" onclick="presetResult('player')">让闲赢</button>
-            <button class="admin-btn" onclick="presetResult('tie')">让和局</button>
-            <button class="admin-btn" onclick="clearPreset()">随机</button>
+            <button class="admin-btn" onclick="presetResult('banker')">让庄赢</button><button class="admin-btn" onclick="presetResult('player')">让闲赢</button><button class="admin-btn" onclick="presetResult('tie')">让和局</button><button class="admin-btn" onclick="clearPreset()">随机</button>
             <hr style="border-color:#333;margin:8px 0;">
-            <button class="admin-btn" onclick="dealCards()">🃏 手动发牌</button>
+            <button class="admin-btn" onclick="dealCards()">🃏发牌</button><button class="admin-btn" onclick="syncOdds()">🔄同步盘口</button>
         </div>
-
-        <div class="player-list">
-            <h3>👥 在线会员</h3>
-            <div id="playerList"></div>
-        </div>
+        <div class="player-list"><h3>👥 在线会员</h3><div id="playerList"></div></div>
     </div>
-
-    <audio id="bgMusic" loop>
-        <source src="https://cdn.pixabay.com/audio/2022/10/25/audio_946bc3a5ca.mp3" type="audio/mpeg">
-    </audio>
-
+    <audio id="bgMusic" loop><source src="https://cdn.pixabay.com/audio/2022/10/25/audio_946bc3a5ca.mp3" type="audio/mpeg"></audio>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         let myRole, myId, myBalance = 0, selectedBetType, selectedAmount, roundActive = false;
         let soundOn = true;
-        const bgMusic = document.getElementById('bgMusic');
-        document.addEventListener('click', () => { if (soundOn) bgMusic.play().catch(()=>{}); }, { once: true });
-        function toggleSound() { soundOn = !soundOn; document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) bgMusic.play(); else bgMusic.pause(); }
-
+        document.addEventListener('click', () => { if (soundOn) document.getElementById('bgMusic').play().catch(()=>{}); }, { once: true });
+        function toggleSound() { soundOn = !soundOn; document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) document.getElementById('bgMusic').play(); else document.getElementById('bgMusic').pause(); }
         function showRegister() { document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='block'; document.getElementById('adminForm').style.display='none'; }
         function showLogin() { document.getElementById('loginForm').style.display='block'; document.getElementById('registerForm').style.display='none'; document.getElementById('adminForm').style.display='none'; }
         function showAdminLogin() { document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='none'; document.getElementById('adminForm').style.display='block'; }
-
-        function register() {
-            const name = document.getElementById('regName').value.trim();
-            const password = document.getElementById('regPassword').value.trim();
-            if (!name || !password) return alert('请填写完整');
-            socket.emit('register', { name, password });
-        }
-        function memberLogin() {
-            const name = document.getElementById('loginName').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            if (!name || !password) return alert('请填写完整');
-            socket.emit('login', { name, password });
-        }
-        function adminLogin() {
-            const account = document.getElementById('adminAccount').value.trim();
-            const password = document.getElementById('adminPassword').value.trim();
-            socket.emit('login', { account, password });
-        }
-
-        socket.on('registerSuccess', (data) => {
-            myRole = 'player'; myId = data.id; myBalance = data.balance;
-            document.getElementById('loginModal').style.display='none';
-            document.getElementById('mainUI').style.display='block';
-            document.getElementById('myBalance').textContent = myBalance;
+        function register() { const n=document.getElementById('regName').value.trim(); const p=document.getElementById('regPassword').value.trim(); if(n&&p) socket.emit('register',{name:n,password:p}); }
+        function memberLogin() { const n=document.getElementById('loginName').value.trim(); const p=document.getElementById('loginPassword').value.trim(); if(n&&p) socket.emit('login',{name:n,password:p}); }
+        function adminLogin() { const a=document.getElementById('adminAccount').value.trim(); const p=document.getElementById('adminPassword').value.trim(); socket.emit('login',{account:a,password:p}); }
+        socket.on('registerSuccess',(d)=>{ myRole='player'; myId=d.id; myBalance=d.balance; document.getElementById('loginModal').style.display='none'; document.getElementById('mainUI').style.display='block'; document.getElementById('myBalance').textContent=myBalance; });
+        socket.on('loginSuccess',(d)=>{ myRole=d.role; myId=d.id; myBalance=d.balance; document.getElementById('loginModal').style.display='none'; document.getElementById('mainUI').style.display='block'; document.getElementById('myBalance').textContent=myBalance; if(d.role==='admin') document.getElementById('adminPanel').style.display='block'; });
+        socket.on('error',msg=>alert(msg));
+        function switchPage(p){ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active'); }
+        function selectBet(t){ if(!roundActive){ selectedBetType=t; document.querySelectorAll('#page-baccarat .bet-btn').forEach(b=>b.classList.remove('selected')); event.target.classList.add('selected'); } }
+        function selectAmount(a){ selectedAmount=a; document.querySelectorAll('#page-baccarat .amount-btn').forEach(b=>b.classList.remove('selected')); event.target.classList.add('selected'); }
+        function placeBet(){ if(!selectedBetType||!selectedAmount) return; let a=selectedAmount==='all'?myBalance:selectedAmount; socket.emit('bet',{type:selectedBetType,amount:parseInt(a)}); }
+        function recharge(){ socket.emit('recharge',{playerId:document.getElementById('rechargeId').value.trim(),amount:document.getElementById('rechargeAmount').value}); }
+        function deduct(){ socket.emit('deduct',{playerId:document.getElementById('rechargeId').value.trim(),amount:document.getElementById('rechargeAmount').value}); }
+        function setVip(v){ socket.emit('setVip',{playerId:document.getElementById('rechargeId').value.trim(),vip:v}); }
+        function presetResult(r){ socket.emit('presetResult',r); }
+        function clearPreset(){ socket.emit('clearPreset'); }
+        function dealCards(){ socket.emit('deal'); }
+        function changeRoom(r){ socket.emit('changeRoom',r); }
+        function syncOdds(){ fetch('/api/sync-odds').then(r=>r.json()).then(d=>alert('同步成功：'+d.count+'场')); }
+        socket.on('gameState',(s)=>{
+            roundActive=s.roundActive;
+            document.getElementById('bankerCards').innerHTML=s.bankerCards.length?s.bankerCards.map(c=>`<div class="card ${['♥','♦'].includes(c.suit)?'red':''}">${c.display}</div>`).join(''):'<div class="card back">?</div><div class="card back">?</div>';
+            document.getElementById('playerCards').innerHTML=s.playerCards.length?s.playerCards.map(c=>`<div class="card ${['♥','♦'].includes(c.suit)?'red':''}">${c.display}</div>`).join(''):'<div class="card back">?</div><div class="card back">?</div>';
+            document.getElementById('bankerPoints').textContent=s.result?s.result.bankerPoints+'点':'';
+            document.getElementById('playerPoints').textContent=s.result?s.result.playerPoints+'点':'';
+            const b=document.getElementById('resultBanner');
+            if(s.result){ b.className='result-banner '+(s.result.winner==='tie'?'tie':'win'); b.textContent=(s.result.winner==='banker'?'🏦庄赢':s.result.winner==='player'?'👤闲赢':'🤝和局'); }
+            else { b.className='result-banner'; }
+            document.getElementById('timer').textContent=s.roundActive?'开牌中...':'请下注';
         });
-        socket.on('loginSuccess', (data) => {
-            myRole = data.role; myId = data.id; myBalance = data.balance;
-            document.getElementById('loginModal').style.display='none';
-            document.getElementById('mainUI').style.display='block';
-            document.getElementById('myBalance').textContent = myBalance;
-            if (myRole === 'admin') document.getElementById('adminPanel').style.display='block';
-        });
-        socket.on('error', msg => alert(msg));
-
-        function selectBet(type) { if (!roundActive) { selectedBetType = type; document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('selected')); event.target.classList.add('selected'); } }
-        function selectAmount(amount) { selectedAmount = amount; document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected')); event.target.classList.add('selected'); }
-        function placeBet() {
-            if (!selectedBetType || !selectedAmount) return alert('请选择');
-            let amount = selectedAmount === 'all' ? myBalance : selectedAmount;
-            socket.emit('bet', { type: selectedBetType, amount: parseInt(amount) });
-        }
-        function recharge() { socket.emit('recharge', { playerId: document.getElementById('rechargeId').value.trim(), amount: document.getElementById('rechargeAmount').value }); }
-        function deduct() { socket.emit('deduct', { playerId: document.getElementById('rechargeId').value.trim(), amount: document.getElementById('rechargeAmount').value }); }
-        function setVip(v) { socket.emit('setVip', { playerId: document.getElementById('rechargeId').value.trim(), vip: v }); }
-        function presetResult(r) { socket.emit('presetResult', r); }
-        function clearPreset() { socket.emit('clearPreset'); }
-        function dealCards() { socket.emit('deal'); }
-        function changeRoom(r) { socket.emit('changeRoom', r); }
-
-        socket.on('gameState', (state) => {
-            roundActive = state.roundActive;
-            document.getElementById('bankerCards').innerHTML = state.bankerCards.length ? state.bankerCards.map(c => `<div class="card ${['♥','♦'].includes(c.suit)?'red':''}">${c.display}</div>`).join('') : '<div class="card back">?</div><div class="card back">?</div>';
-            document.getElementById('playerCards').innerHTML = state.playerCards.length ? state.playerCards.map(c => `<div class="card ${['♥','♦'].includes(c.suit)?'red':''}">${c.display}</div>`).join('') : '<div class="card back">?</div><div class="card back">?</div>';
-            document.getElementById('bankerPoints').textContent = state.result ? state.result.bankerPoints + '点' : '';
-            document.getElementById('playerPoints').textContent = state.result ? state.result.playerPoints + '点' : '';
-            const banner = document.getElementById('resultBanner');
-            if (state.result) {
-                banner.className = 'result-banner ' + (state.result.winner === 'banker' ? 'win' : state.result.winner === 'player' ? 'win' : 'tie');
-                banner.textContent = (state.result.winner === 'banker' ? '🏦 庄赢' : state.result.winner === 'player' ? '👤 闲赢' : '🤝 和局');
-            } else { banner.className = 'result-banner'; }
-            document.getElementById('timer').textContent = state.roundActive ? '开牌中...' : '请下注';
-            document.querySelectorAll('.room-tab').forEach(t => {
-                t.classList.toggle('active', t.textContent.trim().startsWith(state.currentRoom));
-            });
-        });
-
-        socket.on('membersList', (list) => {
-            document.getElementById('playerList').innerHTML = list.map(m => `<div class="player-item"><span>${m.vip?'⭐':''}${m.name}</span><span>ID:${m.id}</span><span>💰${m.balance}</span></div>`).join('');
-        });
-
-        socket.on('balanceUpdate', (bal) => { myBalance = bal; document.getElementById('myBalance').textContent = bal; });
+        socket.on('membersList',(l)=>{ document.getElementById('playerList').innerHTML=l.map(m=>`<div class="player-item"><span>${m.vip?'⭐':''}${m.name}</span><span>ID:${m.id}</span><span>💰${m.balance}</span></div>`).join(''); });
+        socket.on('balanceUpdate',(bal)=>{ myBalance=bal; document.getElementById('myBalance').textContent=bal; });
+        fetch('/api/odds').then(r=>r.json()).then(d=>{ let h=''; d.forEach(m=>{ h+=`<div style="background:#111;border:1px solid #d4af37;border-radius:10px;padding:12px;margin:8px 0;"><div style="font-weight:bold;color:#ffd700;">${m.home} vs ${m.away}</div><div style="display:flex;gap:10px;margin-top:8px;text-align:center;"><div style="flex:1;color:#5dade2;">主胜 ${m.odds.home}</div><div style="flex:1;color:#f39c12;">平 ${m.odds.draw}</div><div style="flex:1;color:#e74c3c;">客胜 ${m.odds.away}</div></div></div>`; }); document.getElementById('sportsList').innerHTML=h||'暂无盘口'; }).catch(()=>{ document.getElementById('sportsList').innerHTML='盘口加载失败'; });
     </script>
 </body>
 </html>
