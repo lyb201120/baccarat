@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
@@ -10,12 +11,17 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============ 管理员账号 ============
 const ADMIN_ACCOUNT = 'Zjcu201120withu';
 const ADMIN_PASSWORD = 'Lyb201120';
 
-// ============ 数据存储 ============
-let members = {}; // {socketId: {id, name, password, balance, vip}}
+// ============ API 配置 ============
+const ODDS_API_KEY = process.env.ODDS_API_KEY || '';
+const ODDS_API_URL = 'https://api.the-odds-api.com/v4/sports';
+
+let members = {};
+let sportsOdds = [];
+let lastOddsUpdate = null;
+
 let gameState = {
     bets: {},
     roundActive: false,
@@ -28,12 +34,61 @@ let gameState = {
     currentRoom: 'A'
 };
 
-const START_CHIPS = 1000;
+// ============ API 路由 ============
+app.get('/api/odds', async (req, res) => {
+    if (sportsOdds.length > 0) {
+        return res.json(sportsOdds);
+    }
+    if (ODDS_API_KEY) {
+        try {
+            const response = await axios.get(`${ODDS_API_URL}/soccer_epl/odds`, {
+                params: { apiKey: ODDS_API_KEY, regions: 'eu', markets: 'h2h', oddsFormat: 'decimal' }
+            });
+            sportsOdds = response.data.map(m => ({
+                home: m.home_team,
+                away: m.away_team,
+                odds: {
+                    home: m.bookmakers[0]?.markets[0]?.outcomes[0]?.price || '-',
+                    draw: m.bookmakers[0]?.markets[0]?.outcomes[1]?.price || '-',
+                    away: m.bookmakers[0]?.markets[0]?.outcomes[2]?.price || '-'
+                }
+            }));
+            lastOddsUpdate = new Date();
+            res.json(sportsOdds);
+        } catch (e) {
+            res.json([]);
+        }
+    } else {
+        res.json([]);
+    }
+});
 
+app.get('/api/sync-odds', async (req, res) => {
+    if (!ODDS_API_KEY) return res.json({ success: false, message: 'API Key未配置' });
+    try {
+        const response = await axios.get(`${ODDS_API_URL}/soccer_epl/odds`, {
+            params: { apiKey: ODDS_API_KEY, regions: 'eu', markets: 'h2h', oddsFormat: 'decimal' }
+        });
+        sportsOdds = response.data.map(m => ({
+            home: m.home_team,
+            away: m.away_team,
+            odds: {
+                home: m.bookmakers[0]?.markets[0]?.outcomes[0]?.price || '-',
+                draw: m.bookmakers[0]?.markets[0]?.outcomes[1]?.price || '-',
+                away: m.bookmakers[0]?.markets[0]?.outcomes[2]?.price || '-'
+            }
+        }));
+        lastOddsUpdate = new Date();
+        res.json({ success: true, count: sportsOdds.length });
+    } catch (e) {
+        res.json({ success: false, message: e.message });
+    }
+});
+
+// ============ Socket.io ============
 io.on('connection', (socket) => {
     console.log('连接:', socket.id);
 
-    // ============ 注册 ============
     socket.on('register', (data) => {
         const { name, password } = data;
         const exists = Object.values(members).find(m => m.name === name);
@@ -44,10 +99,8 @@ io.on('connection', (socket) => {
         broadcastMembers();
     });
 
-    // ============ 登录 ============
     socket.on('login', (data) => {
         const { account, password, name } = data;
-        // 管理员登录
         if (account === ADMIN_ACCOUNT && password === ADMIN_PASSWORD) {
             if (gameState.hostSocketId && gameState.hostSocketId !== socket.id) {
                 socket.emit('error', '管理员已在其他地方登录');
@@ -60,10 +113,8 @@ io.on('connection', (socket) => {
             broadcastGameState();
             return;
         }
-        // 会员登录
         const member = Object.values(members).find(m => m.name === name && m.password === password);
         if (!member) { socket.emit('error', '用户名或密码错误'); return; }
-        // 更新socketId
         const oldKey = Object.keys(members).find(k => members[k].id === member.id);
         if (oldKey) delete members[oldKey];
         members[socket.id] = member;
@@ -72,7 +123,6 @@ io.on('connection', (socket) => {
         broadcastGameState();
     });
 
-    // ============ 下注 ============
     socket.on('bet', (data) => {
         const member = members[socket.id];
         if (!member || gameState.roundActive) return;
@@ -85,19 +135,15 @@ io.on('connection', (socket) => {
         member.balance -= amount;
         gameState.bets[socket.id] = { type, amount };
         broadcastGameState();
-        socket.emit('betSuccess', `下注成功：${type === 'banker' ? '庄' : type === 'player' ? '闲' : '和'} ${amount}`);
     });
 
-    // ============ 管理员功能 ============
     socket.on('recharge', (data) => {
         if (socket.id !== gameState.hostSocketId) return;
         const { playerId, amount } = data;
         const target = Object.entries(members).find(([_, m]) => m.id === playerId);
         if (target) {
             target[1].balance += parseInt(amount);
-            const targetSid = target[0];
-            io.to(targetSid).emit('balanceUpdate', target[1].balance);
-            socket.emit('rechargeSuccess', `成功给 ${target[1].name} 充值 ${amount}`);
+            io.to(target[0]).emit('balanceUpdate', target[1].balance);
             broadcastMembers();
         }
     });
@@ -108,9 +154,7 @@ io.on('connection', (socket) => {
         const target = Object.entries(members).find(([_, m]) => m.id === playerId);
         if (target) {
             target[1].balance -= parseInt(amount);
-            const targetSid = target[0];
-            io.to(targetSid).emit('balanceUpdate', target[1].balance);
-            socket.emit('rechargeSuccess', `成功从 ${target[1].name} 扣除 ${amount}`);
+            io.to(target[0]).emit('balanceUpdate', target[1].balance);
             broadcastMembers();
         }
     });
@@ -124,13 +168,11 @@ io.on('connection', (socket) => {
     socket.on('presetResult', (result) => {
         if (socket.id !== gameState.hostSocketId) return;
         gameState.presetWinner = result;
-        socket.emit('presetConfirm', `已设定：${result === 'banker' ? '庄赢' : result === 'player' ? '闲赢' : '和局'}`);
     });
 
     socket.on('clearPreset', () => {
         if (socket.id !== gameState.hostSocketId) return;
         gameState.presetWinner = null;
-        socket.emit('presetConfirm', '已恢复随机');
     });
 
     socket.on('changeRoom', (room) => {
@@ -139,7 +181,6 @@ io.on('connection', (socket) => {
         broadcastGameState();
     });
 
-    // ============ 发牌 ============
     socket.on('deal', () => {
         if (gameState.roundActive) return;
         gameState.roundActive = true;
@@ -160,22 +201,16 @@ io.on('connection', (socket) => {
         }, 2000);
     });
 
-    // ============ 断开 ============
     socket.on('disconnect', () => {
         if (socket.id === gameState.hostSocketId) gameState.hostSocketId = null;
         broadcastMembers();
     });
 });
 
-// ============ 工具函数 ============
 function randomCard() {
     const suits = ['♠', '♥', '♦', '♣'];
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    return {
-        suit: suits[Math.floor(Math.random() * 4)],
-        value: values[Math.floor(Math.random() * 13)],
-        get display() { return this.value + this.suit; }
-    };
+    return { suit: suits[Math.floor(Math.random() * 4)], value: values[Math.floor(Math.random() * 13)], get display() { return this.value + this.suit; } };
 }
 
 function calculatePoints(cards) {
@@ -227,24 +262,17 @@ function revealResult() {
 
 function broadcastGameState() {
     io.emit('gameState', {
-        bets: gameState.bets,
-        roundActive: gameState.roundActive,
-        bankerCards: gameState.bankerCards,
-        playerCards: gameState.playerCards,
-        result: gameState.result,
-        presetWinner: gameState.presetWinner,
-        currentRoom: gameState.currentRoom,
-        roomLimit: gameState.roomLimits[gameState.currentRoom],
+        bets: gameState.bets, roundActive: gameState.roundActive,
+        bankerCards: gameState.bankerCards, playerCards: gameState.playerCards,
+        result: gameState.result, presetWinner: gameState.presetWinner,
+        currentRoom: gameState.currentRoom, roomLimit: gameState.roomLimits[gameState.currentRoom],
         hostOnline: !!gameState.hostSocketId
     });
 }
 
 function broadcastMembers() {
-    const list = Object.values(members).map(m => ({ id: m.id, name: m.name, balance: m.balance, vip: m.vip }));
-    io.emit('membersList', list);
+    io.emit('membersList', Object.values(members).map(m => ({ id: m.id, name: m.name, balance: m.balance, vip: m.vip })));
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log('皇家百家乐启动在端口:', PORT);
-});
+server.listen(PORT, '0.0.0.0', () => console.log('皇家百家乐启动:', PORT));
